@@ -75,7 +75,13 @@ async fn get_highscores(req: actix_web::HttpRequest, data: web::Data<AppState>) 
 
 #[post("/")]
 async fn set_highscore(req: web::Json<Highscore>, data: web::Data<AppState>) -> impl Responder {
-	HttpResponse::Ok().body("Hello world!")
+	let highscore = req.0;
+	
+	let mut state = data.highscores.lock().expect("Unable to get mutable access to the state");
+
+	state.push(highscore);
+
+	HttpResponse::Ok()
 }
 
 #[actix_web::main]
