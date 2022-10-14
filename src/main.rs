@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 struct Highscore {
 	pub score: u32,
 	pub name: String,
+	pub version: String,
 }
 
 impl Responder for Highscore {
@@ -27,6 +28,7 @@ impl Responder for Highscore {
 
 struct AppState {
 	pub highscores: Mutex<Vec<Highscore>>,
+	pub top_ten: Mutex<[Highscore; 10]>
 }
 
 impl Serialize for AppState {
@@ -50,7 +52,7 @@ impl AppState {
 	pub fn new() -> Self {
 		let mut highscores = Mutex::new(Vec::new());
 
-		highscores.get_mut().unwrap().push(Highscore { score: 19, name: "abow".to_string() });
+		highscores.get_mut().unwrap().push(Highscore { score: 19, name: "abow".to_string(), version: "0.0.1".to_string() });
 
 		Self { highscores }
 	}
@@ -59,7 +61,12 @@ impl AppState {
 impl Responder for &AppState {
 	type Body = BoxBody;
 
-	fn respond_to(self, _: &HttpRequest) -> HttpResponse<Self::Body> {
+	fn respond_to(self, req: &HttpRequest) -> HttpResponse<Self::Body> {
+    match req {
+       
+      _ => {}
+    }	
+	
 		let res_body = serde_json::to_string(&self).unwrap();
 
 		HttpResponse::Ok()
@@ -68,12 +75,17 @@ impl Responder for &AppState {
 	}
 }
 
-#[get("/")]
+#[get("/highscores")]
 async fn get_highscores(req: actix_web::HttpRequest, data: web::Data<AppState>) -> impl Responder {
 	data.get_ref().respond_to(&req)
 }
 
-#[post("/")]
+#[get("/top_ten")]
+async fn get_top_ten(req: actix_web::HttpRequest, data web::Data<AppState>) -> impl Responder {
+  
+}
+
+#[post("/highscore")]
 async fn set_highscore(req: web::Json<Highscore>, data: web::Data<AppState>) -> impl Responder {
 	let highscore = req.0;
 	
@@ -97,6 +109,7 @@ async fn main() -> std::io::Result<()> {
 			.app_data(web::Data::clone(&state))
 			.service(get_highscores)
 			.service(set_highscore)
+			.service(get_top_ten)
 	})
 	.bind(("0.0.0.0", 80))?
 	.bind(("0.0.0.0", 443))?
