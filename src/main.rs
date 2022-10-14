@@ -20,7 +20,9 @@ struct Highscore {
 	pub version: String,
 }
 
-struct Highscores {a: Vec<Highscore>}
+struct Highscores {
+	a: Vec<Highscore>,
+}
 
 impl core::ops::Deref for Highscores {
 	type Target = Vec<Highscore>;
@@ -38,9 +40,7 @@ impl core::ops::DerefMut for Highscores {
 
 impl core::convert::From<Vec<Highscore>> for Highscores {
 	fn from(original: Vec<Highscore>) -> Self {
-		Self {
-			a: original
-		}
+		Self { a: original }
 	}
 }
 
@@ -58,14 +58,15 @@ impl Responder for Highscore {
 
 impl Serialize for Highscores {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-		where
-			S: serde::Serializer {
+	where
+		S: serde::Serializer,
+	{
 		serializer.collect_seq(self.a.iter())
 	}
 }
 
 struct AppState {
-	tmp: RwLock<u32>
+	tmp: RwLock<u32>,
 }
 
 impl Serialize for AppState {
@@ -121,7 +122,7 @@ impl AppState {
 		.expect("unable to create db table");
 
 		Self {
-			tmp: RwLock::new(1)
+			tmp: RwLock::new(1),
 		}
 	}
 
@@ -256,7 +257,6 @@ async fn get_top_ten(
 
 #[post("/highscore")]
 async fn set_highscore(req: web::Json<Highscore>, data: web::Data<AppState>) -> impl Responder {
-
 	let mut rwlock = data.tmp.write().expect("lock is poisoned");
 	let conn = Connection::open("./state/highscores.sqlite3").expect("Unable to read the database");
 
@@ -268,7 +268,6 @@ async fn set_highscore(req: web::Json<Highscore>, data: web::Data<AppState>) -> 
 	)
 	.expect("Unable to add row to database");
 
-	
 	*rwlock = 1;
 	HttpResponse::Ok()
 }
@@ -278,6 +277,7 @@ async fn main() -> std::io::Result<()> {
 	let mut path = std::env::current_exe()?;
 	path.pop();
 	std::env::set_current_dir(path)?;
+	println!("kuk");
 
 	let state = web::Data::new(AppState::load());
 

@@ -1,4 +1,4 @@
-POST http://127.0.0.1/highscore 
+POST http://gp1_highscore.smorsoft.com/highscore 
 content-type: application/json
 
 {
