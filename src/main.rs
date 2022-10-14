@@ -1,14 +1,12 @@
 use std::{
-	io::{BufRead, BufReader},
-	sync::{Mutex, RwLock},
+	sync::RwLock,
 };
 
 use actix_web::{
-	body::BoxBody, get, http::header::ContentType, post, put, web, App, Error, HttpRequest,
+	body::BoxBody, get, http::header::ContentType, post, web, App, HttpRequest,
 	HttpResponse, HttpServer, Responder,
 };
 
-use rusqlite::NO_PARAMS;
 use rusqlite::{Connection, Result};
 
 use serde::{Deserialize, Serialize};
@@ -47,7 +45,7 @@ impl core::convert::From<Vec<Highscore>> for Highscores {
 impl Responder for Highscore {
 	type Body = BoxBody;
 
-	fn respond_to(self, req: &HttpRequest) -> HttpResponse<Self::Body> {
+	fn respond_to(self, _: &HttpRequest) -> HttpResponse<Self::Body> {
 		let res_body = serde_json::to_string(&self).unwrap();
 
 		HttpResponse::Ok()
@@ -127,7 +125,7 @@ impl AppState {
 	}
 
 	pub fn get_scores(&self) -> Highscores {
-		self.tmp.read();
+		let tmp = self.tmp.read().expect("unable to lock the rwlock");
 
 		let mut highscores: Vec<Highscore> = Vec::new();
 		let conn =
@@ -151,6 +149,10 @@ impl AppState {
 				Ok(r) => highscores.push(r),
 				Err(_) => {}
 			}
+		}
+
+		if *tmp == 1 {
+			drop(tmp)
 		}
 
 		highscores.into()
@@ -230,7 +232,7 @@ async fn get_highscores(req: actix_web::HttpRequest, data: web::Data<AppState>) 
 #[get("/highscores/{version}")]
 async fn get_highscores_version(
 	version: web::Path<String>,
-	req: actix_web::HttpRequest,
+	_: actix_web::HttpRequest,
 	data: web::Data<AppState>,
 ) -> impl Responder {
 	let highscores = data.get_versioned_scores(version.to_string());
@@ -244,7 +246,7 @@ async fn get_highscores_version(
 #[get("/top_ten/{version}")]
 async fn get_top_ten(
 	version: web::Path<String>,
-	req: actix_web::HttpRequest,
+	_: actix_web::HttpRequest,
 	data: web::Data<AppState>,
 ) -> impl Responder {
 	let highscores = data.get_top_ten(version.to_string());
@@ -277,7 +279,6 @@ async fn main() -> std::io::Result<()> {
 	let mut path = std::env::current_exe()?;
 	path.pop();
 	std::env::set_current_dir(path)?;
-	println!("kuk");
 
 	let state = web::Data::new(AppState::load());
 
