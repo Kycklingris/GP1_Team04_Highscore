@@ -1,1 +1,1 @@
-GET http://gp1_highscore.smorsoft.com/highscores
+GET https://gp1_highscore.smorsoft.com/highscores
