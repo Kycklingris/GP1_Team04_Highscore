@@ -11,37 +11,6 @@ pub struct AppState {
 	pub tmp: RwLock<u32>,
 }
 
-impl Serialize for AppState {
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-	where
-		S: serde::Serializer,
-	{
-		let highscores = self.get_scores();
-
-		serializer.collect_seq(highscores.iter())
-	}
-}
-
-impl Responder for AppState {
-	type Body = BoxBody;
-
-	fn respond_to(self, req: &HttpRequest) -> HttpResponse<Self::Body> {
-		(&self).respond_to(req)
-	}
-}
-
-impl Responder for &AppState {
-	type Body = BoxBody;
-
-	fn respond_to(self, _: &HttpRequest) -> HttpResponse<Self::Body> {
-		let res_body = serde_json::to_string(&self).unwrap();
-
-		HttpResponse::Ok()
-			.content_type(ContentType::json())
-			.body(res_body)
-	}
-}
-
 impl AppState {
 	pub fn load() -> Self {
 		let mut path = std::env::current_exe().expect("Unable to get the current exe path");
