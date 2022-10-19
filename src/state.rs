@@ -75,7 +75,7 @@ impl AppState {
 		let conn =
 			Connection::open("./state/highscores.sqlite3").expect("Unable to read the database");
 		let mut stmt = conn
-			.prepare("SELECT version, score, name FROM highscores")
+			.prepare("SELECT version, score, name FROM highscores ORDER BY score DESC")
 			.expect("Unable to read the database");
 		let highscores_iter = stmt
 			.query_map([], |row| {
@@ -108,7 +108,7 @@ impl AppState {
 		let conn =
 			Connection::open("./state/highscores.sqlite3").expect("Unable to read the database");
 		let mut stmt = conn
-			.prepare("SELECT version, score, name FROM highscores WHERE version=:version; ")
+			.prepare("SELECT version, score, name FROM highscores WHERE version=:version; ORDER BY score DESC")
 			.expect("Unable to read the database");
 		let highscores_iter = stmt
 			.query_map(&[(":version", search_version.as_str())], |row| {
