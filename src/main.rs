@@ -12,7 +12,12 @@ use state::*;
 
 #[get("/highscores")]
 async fn get_highscores(req: actix_web::HttpRequest, data: web::Data<AppState>) -> impl Responder {
-	data.get_ref().respond_to(&req)
+	let highscores = data.get_scores();
+	let res_body = serde_json::to_string(&highscores[0..50]).unwrap();
+
+	HttpResponse::Ok()
+		.content_type(ContentType::json())
+		.body(res_body)
 }
 
 #[get("/highscores/{version}")]
@@ -22,7 +27,7 @@ async fn get_highscores_version(
 	data: web::Data<AppState>,
 ) -> impl Responder {
 	let highscores = data.get_versioned_scores(version.to_string());
-	let res_body = serde_json::to_string(&highscores).unwrap();
+	let res_body = serde_json::to_string(&highscores[0..50]).unwrap();
 
 	HttpResponse::Ok()
 		.content_type(ContentType::json())

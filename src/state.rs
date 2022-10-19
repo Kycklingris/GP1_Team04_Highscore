@@ -11,37 +11,6 @@ pub struct AppState {
 	pub tmp: RwLock<u32>,
 }
 
-impl Serialize for AppState {
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-	where
-		S: serde::Serializer,
-	{
-		let highscores = self.get_scores();
-
-		serializer.collect_seq(highscores.iter())
-	}
-}
-
-impl Responder for AppState {
-	type Body = BoxBody;
-
-	fn respond_to(self, req: &HttpRequest) -> HttpResponse<Self::Body> {
-		(&self).respond_to(req)
-	}
-}
-
-impl Responder for &AppState {
-	type Body = BoxBody;
-
-	fn respond_to(self, _: &HttpRequest) -> HttpResponse<Self::Body> {
-		let res_body = serde_json::to_string(&self).unwrap();
-
-		HttpResponse::Ok()
-			.content_type(ContentType::json())
-			.body(res_body)
-	}
-}
-
 impl AppState {
 	pub fn load() -> Self {
 		let mut path = std::env::current_exe().expect("Unable to get the current exe path");
@@ -75,7 +44,7 @@ impl AppState {
 		let conn =
 			Connection::open("./state/highscores.sqlite3").expect("Unable to read the database");
 		let mut stmt = conn
-			.prepare("SELECT version, score, name FROM highscores")
+			.prepare("SELECT version, score, name FROM highscores ORDER BY score DESC")
 			.expect("Unable to read the database");
 		let highscores_iter = stmt
 			.query_map([], |row| {
@@ -108,7 +77,7 @@ impl AppState {
 		let conn =
 			Connection::open("./state/highscores.sqlite3").expect("Unable to read the database");
 		let mut stmt = conn
-			.prepare("SELECT version, score, name FROM highscores WHERE version=:version; ")
+			.prepare("SELECT version, score, name FROM highscores WHERE version=:version; ORDER BY score DESC")
 			.expect("Unable to read the database");
 		let highscores_iter = stmt
 			.query_map(&[(":version", search_version.as_str())], |row| {
