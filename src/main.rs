@@ -13,7 +13,12 @@ use state::*;
 #[get("/highscores")]
 async fn get_highscores(req: actix_web::HttpRequest, data: web::Data<AppState>) -> impl Responder {
 	let highscores = data.get_scores();
-	let res_body = serde_json::to_string(&highscores[0..50]).unwrap();
+	let mut length = highscores.len();
+
+	if length > 50 {
+		length = 50;
+	}
+	let res_body = serde_json::to_string(&highscores[0..length]).unwrap();
 
 	HttpResponse::Ok()
 		.content_type(ContentType::json())
@@ -27,7 +32,13 @@ async fn get_highscores_version(
 	data: web::Data<AppState>,
 ) -> impl Responder {
 	let highscores = data.get_versioned_scores(version.to_string());
-	let res_body = serde_json::to_string(&highscores[0..50]).unwrap();
+	let mut length = highscores.len();
+
+	if length > 50 {
+		length = 50;
+	}
+
+	let res_body = serde_json::to_string(&highscores[0..length]).unwrap();
 
 	HttpResponse::Ok()
 		.content_type(ContentType::json())
@@ -41,7 +52,12 @@ async fn get_top_ten(
 	data: web::Data<AppState>,
 ) -> impl Responder {
 	let highscores = data.get_top_ten(version.to_string());
-	let res_body = serde_json::to_string(&highscores[0..10]).unwrap();
+	let mut length = highscores.len();
+
+	if length > 10 {
+		length = 10;
+	}
+	let res_body = serde_json::to_string(&highscores[0..length]).unwrap();
 
 	HttpResponse::Ok()
 		.content_type(ContentType::json())
